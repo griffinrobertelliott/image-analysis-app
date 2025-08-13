@@ -80,8 +80,8 @@ async function extractPdfChunks(absPath: string): Promise<IndexedChunk[]> {
 
 async function buildIndex(): Promise<IndexState> {
   const envPaths = process.env.DOC_PATHS?.split(",").map((p) => p.trim()).filter(Boolean) ?? [];
-  // Fallback to the documents directory
-  const fallback = path.resolve(process.cwd(), "../documents/2024_National_Custodial_Specification_October_2024-1.pdf");
+  // Fallback to the documents directory (relative to project root)
+  const fallback = path.resolve(process.cwd(), "../../documents/2024_National_Custodial_Specification_October_2024-1.pdf");
   const filePaths = envPaths.length > 0 ? envPaths : [fallback];
 
   const allChunks: IndexedChunk[] = [];
@@ -133,7 +133,7 @@ export async function getIndexDiagnostics(): Promise<{
   const idx = await ensureIndex();
 
   const envPaths = process.env.DOC_PATHS?.split(",").map((p) => p.trim()).filter(Boolean) ?? [];
-  const fallback = "/Users/griffinelliott/Development/imageAnalysisApp/2024_National_Custodial_Specification_October_2024-1.pdf";
+  const fallback = path.resolve(process.cwd(), "../../documents/2024_National_Custodial_Specification_October_2024-1.pdf");
   const filePaths = envPaths.length > 0 ? envPaths : [fallback];
 
   const configuredPaths = filePaths.map((p) => {
@@ -209,7 +209,7 @@ export async function scanConfiguredPdfs(maxPages: number = 10): Promise<{
   }[];
 }> {
   const envPaths = process.env.DOC_PATHS?.split(",").map((p) => p.trim()).filter(Boolean) ?? [];
-  const fallback = "/Users/griffinelliott/Development/imageAnalysisApp/2024_National_Custodial_Specification_October_2024-1.pdf";
+  const fallback = path.resolve(process.cwd(), "../../documents/2024_National_Custodial_Specification_October_2024-1.pdf");
   const filePaths = envPaths.length > 0 ? envPaths : [fallback];
 
   const results: {
