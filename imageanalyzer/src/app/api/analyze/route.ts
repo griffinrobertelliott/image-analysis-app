@@ -10,12 +10,21 @@ type AnalyzeRequest = {
   prompt: string;
 };
 
-function extractTextFromMessageContent(message: any): string {
+interface MessageContent {
+  type: string;
+  text?: string;
+}
+
+interface AnthropicMessage {
+  content: MessageContent[];
+}
+
+function extractTextFromMessageContent(message: AnthropicMessage): string {
   try {
     const parts = Array.isArray(message?.content) ? message.content : [];
     const texts = parts
-      .filter((p: any) => p?.type === "text" && typeof p.text === "string")
-      .map((p: any) => p.text);
+      .filter((p: MessageContent) => p?.type === "text" && typeof p.text === "string")
+      .map((p: MessageContent) => p.text!);
     return texts.join("\n\n");
   } catch {
     return "";
@@ -83,7 +92,7 @@ Provide your analysis first, then list any relevant bounding boxes. If no specif
           ],
         },
       ],
-    } as any);
+    });
 
     const resultText = extractTextFromMessageContent(message) || "(No textual output)";
     

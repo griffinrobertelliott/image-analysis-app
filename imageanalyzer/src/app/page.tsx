@@ -158,8 +158,8 @@ export default function Home() {
       setIndexDiag(data.indexDiagnostics);
       setPageScan(data.pageScan);
       setPassed(classifyResult(data.result));
-    } catch (e: any) {
-      setError(e?.message ?? "Something went wrong");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
