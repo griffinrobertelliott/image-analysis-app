@@ -72,24 +72,28 @@ Example: BOUNDING_BOX: [10, 20, 30, 40] - dirty floor area
 
 Provide your analysis first, then list any relevant bounding boxes. If no specific areas need highlighting, don't include any BOUNDING_BOX lines.`;
 
+    const content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = [];
+    
+    if (systemPrefix) {
+      content.push({ type: "text", text: systemPrefix });
+    }
+    content.push({ type: "text", text: enhancedPrompt });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: imageBase64,
+      },
+    });
+
     const message = await anthropic.messages.create({
       model,
       max_tokens: 1024,
       messages: [
         {
           role: "user",
-          content: [
-            ...(systemPrefix ? [{ type: "text", text: systemPrefix }] : []),
-            { type: "text", text: enhancedPrompt },
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: imageBase64,
-              },
-            },
-          ],
+          content,
         },
       ],
     });
