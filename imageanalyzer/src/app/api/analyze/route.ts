@@ -121,8 +121,8 @@ Provide your analysis first, then list any relevant bounding boxes. If no specif
       indexDiagnostics: debug ? diag : undefined,
       pageScan: scan,
     });
-  } catch (err: any) {
-    const msg = err?.message ?? "Unexpected error";
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Unexpected error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
