@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import pdfParse from "pdf-parse";
+import * as pdfjsLib from "pdfjs-dist";
 
 export type IndexedChunk = {
   id: string;
@@ -37,17 +37,38 @@ async function extractPdfChunks(absPath: string): Promise<IndexedChunk[]> {
     // Read the PDF file
     const dataBuffer = fs.readFileSync(absPath);
     
-    // Parse the entire PDF
-    const data = await pdfParse(dataBuffer);
-    const fullText = normalizeWhitespace(data.text);
+    // Configure pdfjs for serverless environment
+    pdfjsLib.GlobalWorkerOptions.workerSrc = undefined;
     
-    if (!fullText) {
+    // Parse the entire PDF
+    const pdf = await pdfjsLib.getDocument({
+      data: dataBuffer,
+      useWorker: false,
+      disableWorker: true
+    }).promise;
+    
+    const numPages = pdf.numPages;
+    let fullText = "";
+    
+    // Extract text from all pages
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(" ");
+      fullText += pageText + " ";
+    }
+    
+    const normalizedText = normalizeWhitespace(fullText);
+    
+    if (!normalizedText) {
       return chunks;
     }
 
     // Split into chunks
-    for (let i = 0; i < fullText.length; i += targetChunkChars) {
-      const slice = fullText.slice(i, Math.min(i + targetChunkChars, fullText.length));
+    for (let i = 0; i < normalizedText.length; i += targetChunkChars) {
+      const slice = normalizedText.slice(i, Math.min(i + targetChunkChars, normalizedText.length));
       const id = `${docName}-p1-${i}`;
       chunks.push({ id, docPath: absPath, docName, page: 1, text: slice });
     }
@@ -208,12 +229,33 @@ export async function scanConfiguredPdfs(maxPages: number = 10): Promise<{
       continue;
     }
     try {
-      // Use pdf-parse to extract text
+      // Use pdfjs-dist to extract text
       const dataBuffer = fs.readFileSync(abs);
-      const data = await pdfParse(dataBuffer);
-      const text = normalizeWhitespace(data.text || "");
       
-      // Since pdf-parse doesn't give us per-page info, we'll just show the total
+      // Configure pdfjs for serverless environment
+      pdfjsLib.GlobalWorkerOptions.workerSrc = undefined;
+      
+      const pdf = await pdfjsLib.getDocument({
+        data: dataBuffer,
+        useWorker: false,
+        disableWorker: true
+      }).promise;
+      
+      const numPages = pdf.numPages;
+      let fullText = "";
+      
+      // Extract text from all pages
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + " ";
+      }
+      
+      const text = normalizeWhitespace(fullText);
+      
       docRes.pages = [{ 
         page: 1, 
         extractedChars: text.length, 
