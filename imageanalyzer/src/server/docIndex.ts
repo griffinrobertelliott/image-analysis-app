@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execFileSync } from "child_process";
+import pdfParse from "pdf-parse";
 
 export type IndexedChunk = {
   id: string;
@@ -33,46 +33,27 @@ async function extractPdfChunks(absPath: string): Promise<IndexedChunk[]> {
   const docName = path.basename(absPath);
   const targetChunkChars = 900;
 
-  const run = (cmd: string, args: string[]): string => {
-    try {
-      return execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 50 * 1024 * 1024 });
-    } catch {
-      return "";
+  try {
+    // Read the PDF file
+    const dataBuffer = fs.readFileSync(absPath);
+    
+    // Parse the entire PDF
+    const data = await pdfParse(dataBuffer);
+    const fullText = normalizeWhitespace(data.text);
+    
+    if (!fullText) {
+      return chunks;
     }
-  };
 
-  // Determine page count with pdfinfo; fall back to whole-doc extraction
-  let pages = 0;
-  const info = run("pdfinfo", [absPath]);
-  const m = info.match(/Pages:\s+(\d+)/);
-  if (m) pages = parseInt(m[1], 10);
-
-  const extractRange = (from?: number, to?: number): string => {
-    const args = ["-enc", "UTF-8", "-layout", "-nopgbrk"] as string[];
-    if (from && to) args.push("-f", String(from), "-l", String(to));
-    args.push(absPath, "-");
-    return normalizeWhitespace(run("pdftotext", args));
-  };
-
-  if (pages > 0) {
-    for (let p = 1; p <= pages; p++) {
-      const pageText = extractRange(p, p);
-      if (!pageText) continue;
-      for (let i = 0; i < pageText.length; i += targetChunkChars) {
-        const slice = pageText.slice(i, Math.min(i + targetChunkChars, pageText.length));
-        const id = `${docName}-p${p}-${i}`;
-        chunks.push({ id, docPath: absPath, docName, page: p, text: slice });
-      }
+    // Split into chunks
+    for (let i = 0; i < fullText.length; i += targetChunkChars) {
+      const slice = fullText.slice(i, Math.min(i + targetChunkChars, fullText.length));
+      const id = `${docName}-p1-${i}`;
+      chunks.push({ id, docPath: absPath, docName, page: 1, text: slice });
     }
-  } else {
-    const all = extractRange();
-    if (all) {
-      for (let i = 0; i < all.length; i += targetChunkChars) {
-        const slice = all.slice(i, Math.min(i + targetChunkChars, all.length));
-        const id = `${docName}-p1-${i}`;
-        chunks.push({ id, docPath: absPath, docName, page: 1, text: slice });
-      }
-    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("Failed to parse PDF", absPath, err);
   }
 
   return chunks;
@@ -227,27 +208,24 @@ export async function scanConfiguredPdfs(maxPages: number = 10): Promise<{
       continue;
     }
     try {
-      // Use pdfinfo to get page count, then pdftotext per-page
-      let pages = 0;
-      try {
-        const info = execFileSync("pdfinfo", [abs], { encoding: "utf8" });
-        const m = info.match(/Pages:\s+(\d+)/);
-        pages = m ? parseInt(m[1], 10) : 0;
-      } catch {}
-      const upto = pages > 0 ? Math.min(maxPages, pages) : maxPages;
-      const pagesOut: { page: number; extractedChars: number; usedOcr: boolean; error?: string }[] = [];
-      for (let pg = 1; pg <= upto; pg++) {
-        try {
-          const out = execFileSync("pdftotext", ["-enc", "UTF-8", "-layout", "-nopgbrk", "-f", String(pg), "-l", String(pg), abs, "-"], { encoding: "utf8" });
-          const text = normalizeWhitespace(out || "");
-          pagesOut.push({ page: pg, extractedChars: text.length, usedOcr: false });
-        } catch (e: any) {
-          pagesOut.push({ page: pg, extractedChars: 0, usedOcr: false, error: e?.message || String(e) });
-        }
-      }
-      docRes.pages = pagesOut;
+      // Use pdf-parse to extract text
+      const dataBuffer = fs.readFileSync(abs);
+      const data = await pdfParse(dataBuffer);
+      const text = normalizeWhitespace(data.text || "");
+      
+      // Since pdf-parse doesn't give us per-page info, we'll just show the total
+      docRes.pages = [{ 
+        page: 1, 
+        extractedChars: text.length, 
+        usedOcr: false 
+      }];
     } catch (e) {
-      docRes.pages = [{ page: 0, extractedChars: 0, usedOcr: false, error: (e as any)?.message || String(e) }];
+      docRes.pages = [{ 
+        page: 0, 
+        extractedChars: 0, 
+        usedOcr: false, 
+        error: (e as any)?.message || String(e) 
+      }];
     }
     results.push(docRes);
   }
