@@ -42,9 +42,7 @@ async function extractPdfChunks(absPath: string): Promise<IndexedChunk[]> {
     
     // Parse the entire PDF
     const pdf = await pdfjsLib.getDocument({
-      data: dataBuffer,
-      useWorker: false,
-      disableWorker: true
+      data: dataBuffer
     }).promise;
     
     const numPages = pdf.numPages;
@@ -236,9 +234,7 @@ export async function scanConfiguredPdfs(maxPages: number = 10): Promise<{
       (pdfjsLib.GlobalWorkerOptions as any).workerSrc = undefined;
       
       const pdf = await pdfjsLib.getDocument({
-        data: dataBuffer,
-        useWorker: false,
-        disableWorker: true
+        data: dataBuffer
       }).promise;
       
       const numPages = pdf.numPages;
