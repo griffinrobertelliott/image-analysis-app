@@ -38,7 +38,7 @@ async function extractPdfChunks(absPath: string): Promise<IndexedChunk[]> {
     const dataBuffer = fs.readFileSync(absPath);
     
     // Configure pdfjs for serverless environment
-    pdfjsLib.GlobalWorkerOptions.workerSrc = undefined;
+    (pdfjsLib.GlobalWorkerOptions as any).workerSrc = undefined;
     
     // Parse the entire PDF
     const pdf = await pdfjsLib.getDocument({
@@ -233,7 +233,7 @@ export async function scanConfiguredPdfs(maxPages: number = 10): Promise<{
       const dataBuffer = fs.readFileSync(abs);
       
       // Configure pdfjs for serverless environment
-      pdfjsLib.GlobalWorkerOptions.workerSrc = undefined;
+      (pdfjsLib.GlobalWorkerOptions as any).workerSrc = undefined;
       
       const pdf = await pdfjsLib.getDocument({
         data: dataBuffer,
