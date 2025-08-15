@@ -23,10 +23,50 @@ export default function Home() {
   const [contextMeta, setContextMeta] = useState<AnalyzeResponse["contextMeta"]>([]);
   const [contextText, setContextText] = useState<string | null | undefined>(undefined);
   const [showDebug, setShowDebug] = useState<boolean>(false);
+  const [showExpanded, setShowExpanded] = useState<boolean>(false);
   const [indexDiag, setIndexDiag] = useState<AnalyzeResponse["indexDiagnostics"]>();
   const [pageScan, setPageScan] = useState<AnalyzeResponse["pageScan"]>();
   const [boundingBoxes, setBoundingBoxes] = useState<AnalyzeResponse["boundingBoxes"]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const extractRecommendation = useCallback((text: string): string => {
+    // Look for "Recommendation:" or similar patterns
+    const recommendationPatterns = [
+      /recommendation:?\s*(.*)/i,
+      /recommend:?\s*(.*)/i,
+      /suggestion:?\s*(.*)/i,
+      /action:?\s*(.*)/i,
+      /next steps:?\s*(.*)/i,
+      /conclusion:?\s*(.*)/i
+    ];
+    
+    for (const pattern of recommendationPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // If no explicit recommendation section, try to extract the last paragraph
+    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    if (paragraphs.length > 0) {
+      const lastParagraph = paragraphs[paragraphs.length - 1].trim();
+      // If the last paragraph is short and seems like a conclusion/recommendation
+      if (lastParagraph.length < 200 && (
+        lastParagraph.toLowerCase().includes('no') ||
+        lastParagraph.toLowerCase().includes('recommend') ||
+        lastParagraph.toLowerCase().includes('action') ||
+        lastParagraph.toLowerCase().includes('attention') ||
+        lastParagraph.toLowerCase().includes('required') ||
+        lastParagraph.toLowerCase().includes('needed')
+      )) {
+        return lastParagraph;
+      }
+    }
+    
+    // Fallback: return the first 200 characters
+    return text.length > 200 ? text.substring(0, 200) + '...' : text;
+  }, []);
 
   const classifyResult = useCallback((raw: string): boolean | null => {
     const text = (raw || "").toLowerCase();
@@ -312,48 +352,105 @@ export default function Home() {
                 </span>
               )}
             </div>
+            
+            {/* Recommendation Section (Always Visible) */}
             <div className="p-4">
-              <div
-                role="textbox"
-                aria-readonly="true"
-                className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words"
-                style={{ border: "1px solid var(--color-border)", color: "var(--color-text-primary)" }}
-              >
-                {result}
+              <div className="mb-3">
+                <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Recommendation</h4>
+                <div
+                  role="textbox"
+                  aria-readonly="true"
+                  className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words"
+                  style={{ border: "1px solid var(--color-border)", color: "var(--color-text-primary)" }}
+                >
+                  {extractRecommendation(result)}
+                </div>
               </div>
-              {showDebug && (
-                <div className="mt-4 space-y-3">
-                  {indexDiag && (
-                    <div className="rounded-md p-3 text-xs" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                      <div>Indexed chunks: {indexDiag.totalChunks}</div>
-                      <div>Files: {indexDiag.files.map(f => `${f.docName} (${f.pages}p)`).join(", ") || "-"}</div>
-                      {indexDiag.configuredPaths && (
-                        <div className="mt-1">Configured paths: {indexDiag.configuredPaths.map(p => `${p.exists ? "✓" : "✕"} ${p.path}`).join("; ")}</div>
-                      )}
+              
+              {/* Expand/Collapse Button */}
+              <button
+                type="button"
+                onClick={() => setShowExpanded(!showExpanded)}
+                className="text-xs underline flex items-center gap-1"
+                style={{ color: "var(--color-accent)" }}
+              >
+                {showExpanded ? "Hide" : "Show"} full analysis
+                <span className="text-xs">
+                  {showExpanded ? "▼" : "▶"}
+                </span>
+              </button>
+            </div>
+            
+            {/* Expanded Analysis Section */}
+            {showExpanded && (
+              <div className="px-4 pb-4 space-y-4" style={{ borderTop: "1px solid var(--color-border)" }}>
+                {/* Full Analysis */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Full Analysis</h4>
+                  <div
+                    role="textbox"
+                    aria-readonly="true"
+                    className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words"
+                    style={{ border: "1px solid var(--color-border)", color: "var(--color-text-primary)" }}
+                  >
+                    {result}
+                  </div>
+                </div>
+                
+                {/* Bounding Boxes Info */}
+                {boundingBoxes && boundingBoxes.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Identified Areas</h4>
+                    <div className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                      {boundingBoxes.length} area{boundingBoxes.length !== 1 ? 's' : ''} identified and highlighted on the image above.
                     </div>
-                  )}
-                  {contextText && (
-                    <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                      {contextText}
-                    </div>
-                  )}
-                  {pageScan && (
-                    <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                      {pageScan.docs.map(d => (
-                        <div key={d.path} className="mb-2">
-                          <div>{d.exists ? "✓" : "✕"} {d.path}</div>
-                          {d.pages && d.pages.length > 0 && (
-                            <div>
-                              {d.pages.map(p => `p.${p.page}: ${p.extractedChars} chars${p.usedOcr ? " (ocr)" : ""}${p.error ? ` error=${p.error}` : ""}`).join("; ")}
-                            </div>
+                  </div>
+                )}
+                
+                {/* Debug Information */}
+                {showDebug && (
+                  <div className="space-y-3">
+                    {indexDiag && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Index</h4>
+                        <div className="rounded-md p-3 text-xs" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                          <div>Indexed chunks: {indexDiag.totalChunks}</div>
+                          <div>Files: {indexDiag.files.map(f => `${f.docName} (${f.pages}p)`).join(", ") || "-"}</div>
+                          {indexDiag.configuredPaths && (
+                            <div className="mt-1">Configured paths: {indexDiag.configuredPaths.map(p => `${p.exists ? "✓" : "✕"} ${p.path}`).join("; ")}</div>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                      </div>
+                    )}
+                    {contextText && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Relevant Context</h4>
+                        <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                          {contextText}
+                        </div>
+                      </div>
+                    )}
+                    {pageScan && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Scan</h4>
+                        <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                          {pageScan.docs.map(d => (
+                            <div key={d.path} className="mb-2">
+                              <div>{d.exists ? "✓" : "✕"} {d.path}</div>
+                              {d.pages && d.pages.length > 0 && (
+                                <div>
+                                  {d.pages.map(p => `p.${p.page}: ${p.extractedChars} chars${p.usedOcr ? " (ocr)" : ""}${p.error ? ` error=${p.error}` : ""}`).join("; ")}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>
