@@ -34,7 +34,7 @@ export default function Home() {
     // 1) Explicit boolean-like mentions take precedence
     const has = (word: string) => new RegExp(`(^|\\b)${word}(\\b|[^a-z])`, "i").test(text);
     const positiveTokens = ["yes", "pass", "passed", "true"];
-    const negativeTokens = ["no", "fail", "failed", "false"];
+    const negativeTokens = ["fail", "failed", "false"];
     const anyPositive = positiveTokens.some(has);
     const anyNegative = negativeTokens.some(has);
     if (anyPositive && !anyNegative) return true;
