@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  /* Light modern dashboard palette - inspired by the prototype */
-  --background: #f8fafc;
-  --foreground: #1e293b;
-  --panel: #ffffff;
-  --panel-elevated: #f1f5f9;
-  --border: #e2e8f0;
-  --muted: #64748b;
+  /* Dark blue-gray dashboard palette - matching the prototype */
+  --background: #1d283d;
+  --foreground: #ffffff;
+  --panel: #363e51;
+  --panel-elevated: #404a5c;
+  --border: #4a5568;
+  --muted: #a0aec0;
   --accent: #0ea5e9;
   --accent-strong: #0284c7;
   --success: #10b981;
@@ -29,8 +29,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #f8fafc;
-    --foreground: #1e293b;
+    --background: #1d283d;
+    --foreground: #ffffff;
   }
 }
 
