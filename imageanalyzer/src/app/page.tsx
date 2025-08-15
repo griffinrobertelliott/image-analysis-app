@@ -82,8 +82,16 @@ export default function Home() {
       return true;
     }
 
+    // Count positive and negative phrases, but exclude negated negative phrases
     const posHits = positivePhrases.filter(p => normalized.includes(p)).length;
-    const negHits = negativePhrases.filter(p => normalized.includes(p)).length;
+    
+    // For negative phrases, only count them if they're NOT negated
+    const negHits = negativePhrases.filter(p => {
+      if (!normalized.includes(p)) return false;
+      // Check if this negative phrase is negated (e.g., "no debris", "no stains")
+      const negationPattern = new RegExp(`(no|without|free of)\\s+(visible\\s+)?${p}`, "i");
+      return !negationPattern.test(text);
+    }).length;
 
     if (posHits > 0 && negHits === 0) return true;
     if (negHits > 0 && posHits === 0) return false;
