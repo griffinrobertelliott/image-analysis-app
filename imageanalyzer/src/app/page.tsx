@@ -51,21 +51,43 @@ export default function Home() {
     const paragraphs = text.split('\n\n').filter(p => p.trim());
     if (paragraphs.length > 0) {
       const lastParagraph = paragraphs[paragraphs.length - 1].trim();
-      // If the last paragraph is short and seems like a conclusion/recommendation
-      if (lastParagraph.length < 200 && (
-        lastParagraph.toLowerCase().includes('no') ||
-        lastParagraph.toLowerCase().includes('recommend') ||
-        lastParagraph.toLowerCase().includes('action') ||
-        lastParagraph.toLowerCase().includes('attention') ||
-        lastParagraph.toLowerCase().includes('required') ||
-        lastParagraph.toLowerCase().includes('needed')
-      )) {
+      // If the last paragraph seems like a conclusion/recommendation
+      if (lastParagraph.toLowerCase().includes('no') ||
+          lastParagraph.toLowerCase().includes('recommend') ||
+          lastParagraph.toLowerCase().includes('action') ||
+          lastParagraph.toLowerCase().includes('attention') ||
+          lastParagraph.toLowerCase().includes('required') ||
+          lastParagraph.toLowerCase().includes('needed') ||
+          lastParagraph.toLowerCase().includes('standards') ||
+          lastParagraph.toLowerCase().includes('cleaning') ||
+          lastParagraph.toLowerCase().includes('maintenance')) {
         return lastParagraph;
       }
     }
     
-    // Fallback: return the first 200 characters
-    return text.length > 200 ? text.substring(0, 200) + '...' : text;
+    // If still no clear recommendation, try to find sentences that contain key recommendation words
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+    const recommendationSentences = sentences.filter(sentence => {
+      const lower = sentence.toLowerCase();
+      return lower.includes('no') ||
+             lower.includes('recommend') ||
+             lower.includes('action') ||
+             lower.includes('attention') ||
+             lower.includes('required') ||
+             lower.includes('needed') ||
+             lower.includes('standards') ||
+             lower.includes('cleaning') ||
+             lower.includes('maintenance') ||
+             lower.includes('should') ||
+             lower.includes('must');
+    });
+    
+    if (recommendationSentences.length > 0) {
+      return recommendationSentences.join('. ').trim() + '.';
+    }
+    
+    // Fallback: return the full text if it's short, otherwise the first 300 characters
+    return text.length > 300 ? text.substring(0, 300) + '...' : text;
   }, []);
 
   const classifyResult = useCallback((raw: string): boolean | null => {
@@ -360,8 +382,13 @@ export default function Home() {
                 <div
                   role="textbox"
                   aria-readonly="true"
-                  className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words"
-                  style={{ border: "1px solid var(--color-border)", color: "var(--color-text-primary)" }}
+                  className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words min-h-20"
+                  style={{ 
+                    border: "1px solid var(--color-border)", 
+                    color: "var(--color-text-primary)",
+                    overflow: "visible",
+                    wordWrap: "break-word"
+                  }}
                 >
                   {extractRecommendation(result)}
                 </div>
