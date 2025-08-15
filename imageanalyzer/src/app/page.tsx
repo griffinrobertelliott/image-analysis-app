@@ -63,7 +63,9 @@ export default function Home() {
     const positivePhrases = [
       "clean", "well maintained", "tidy", "neat", "spotless", "organized", "sanitary", "hygienic",
       "vacuum tracks", "fresh vacuum", "recently cleaned", "orderly", "no clutter", "no debris",
-      "no stains", "no dirt", "no dust", "free of dirt", "free of clutter"
+      "no stains", "no dirt", "no dust", "free of dirt", "free of clutter", "generally clean",
+      "acceptable cleanliness", "cleanliness standards", "no visible stains", "no visible marks",
+      "no visible debris", "properly positioned", "good condition", "well-maintained"
     ];
     const negativePhrases = [
       "dirty", "messy", "clutter", "debris", "stain", "stains", "unclean", "soiled",
@@ -73,6 +75,12 @@ export default function Home() {
     // Patterns that imply positive via negation of negative (e.g., "no visible clutter")
     const negatedNegative = /(no|without|free of)\s+(visible\s+)?(clutter|debris|stains?|dirt|dust|mess|trash|mold)/;
     if (negatedNegative.test(normalized)) return true;
+
+    // Check for positive phrases that indicate cleanliness standards are met
+    const cleanlinessStandards = /(meets|meeting|acceptable|standards|requirements|satisfactory)/i;
+    if (cleanlinessStandards.test(text) && !explicitNegations.some(pattern => pattern.test(text))) {
+      return true;
+    }
 
     const posHits = positivePhrases.filter(p => normalized.includes(p)).length;
     const negHits = negativePhrases.filter(p => normalized.includes(p)).length;
