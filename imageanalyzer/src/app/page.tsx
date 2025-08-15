@@ -382,44 +382,43 @@ export default function Home() {
                 
                 {/* Debug Information */}
                 <div className="space-y-3">
-                    {indexDiag && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Index</h4>
-                        <div className="rounded-md p-3 text-xs" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                          <div>Indexed chunks: {indexDiag.totalChunks}</div>
-                          <div>Files: {indexDiag.files.map(f => `${f.docName} (${f.pages}p)`).join(", ") || "-"}</div>
-                          {indexDiag.configuredPaths && (
-                            <div className="mt-1">Configured paths: {indexDiag.configuredPaths.map(p => `${p.exists ? "✓" : "✕"} ${p.path}`).join("; ")}</div>
-                          )}
-                        </div>
+                  {indexDiag && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Index</h4>
+                      <div className="rounded-md p-3 text-xs" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                        <div>Indexed chunks: {indexDiag.totalChunks}</div>
+                        <div>Files: {indexDiag.files.map(f => `${f.docName} (${f.pages}p)`).join(", ") || "-"}</div>
+                        {indexDiag.configuredPaths && (
+                          <div className="mt-1">Configured paths: {indexDiag.configuredPaths.map(p => `${p.exists ? "✓" : "✕"} ${p.path}`).join("; ")}</div>
+                        )}
                       </div>
-                    )}
-                    {contextText && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Relevant Context</h4>
-                        <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                          {contextText}
-                        </div>
+                    </div>
+                  )}
+                  {contextText && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Relevant Context</h4>
+                      <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                        {contextText}
                       </div>
-                    )}
-                    {pageScan && (
-                      <div>
-                        <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Scan</h4>
-                        <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
-                          {pageScan.docs.map(d => (
-                            <div key={d.path} className="mb-2">
-                              <div>{d.exists ? "✓" : "✕"} {d.path}</div>
-                              {d.pages && d.pages.length > 0 && (
-                                <div>
-                                  {d.pages.map(p => `p.${p.page}: ${p.extractedChars} chars${p.usedOcr ? " (ocr)" : ""}${p.error ? ` error=${p.error}` : ""}`).join("; ")}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                    </div>
+                  )}
+                  {pageScan && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Scan</h4>
+                      <div className="rounded-md p-3 text-xs whitespace-pre-wrap break-words" style={{ border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)", background: "var(--panel-elevated)" }}>
+                        {pageScan.docs.map(d => (
+                          <div key={d.path} className="mb-2">
+                            <div>{d.exists ? "✓" : "✕"} {d.path}</div>
+                            {d.pages && d.pages.length > 0 && (
+                              <div>
+                                {d.pages.map(p => `p.${p.page}: ${p.extractedChars} chars${p.usedOcr ? " (ocr)" : ""}${p.error ? ` error=${p.error}` : ""}`).join("; ")}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
