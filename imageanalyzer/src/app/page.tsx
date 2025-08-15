@@ -408,16 +408,10 @@ export default function Home() {
                   }}
                 >
                   <p className="whitespace-pre-wrap break-words m-0">
-                    {extractRecommendation(result)}
+                    {result}
                   </p>
                 </div>
-                {/* Debug info - remove after fixing */}
-                <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                  Debug: Length={extractRecommendation(result).length}, Text="{extractRecommendation(result).substring(0, 50)}..."
-                </div>
-                <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                  <strong>Full Response (Debug):</strong> {result}
-                </div>
+
               </div>
               
               {/* Expand/Collapse Button */}
