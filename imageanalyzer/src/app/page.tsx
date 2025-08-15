@@ -14,8 +14,7 @@ type AnalyzeResponse = {
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState<string>("");
-  const [showPrompt, setShowPrompt] = useState<boolean>(true);
+  const [prompt] = useState<string>("Describe if the area is clean or not. Be concise and only mention dust if you are absolutely positive. Do not count loose cords or cleaning equipment present as a dirty area. If the area is not clean, provide a recommendation with how to proceed.");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string>("");
@@ -190,7 +189,7 @@ export default function Home() {
     setResult("");
     try {
       const base64 = await readAsBase64(file);
-      const res = await fetch(`/api/analyze${showDebug ? "?debug=1&reindex=1" : ""}`, {
+      const res = await fetch(`/api/analyze?debug=1&reindex=1`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, prompt }),
@@ -275,28 +274,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Prompt</span>
-          <button
-            type="button"
-            className="text-xs underline"
-            style={{ color: "var(--color-accent)" }}
-            onClick={() => setShowPrompt((v) => !v)}
-          >
-            {showPrompt ? "Hide" : "Show"}
-          </button>
-        </div>
-        {showPrompt && (
-          <label className="flex flex-col gap-2">
-            <textarea
-              className="w-full rounded-lg p-3 min-h-24 bg-transparent"
-              style={{ border: "1px solid var(--color-border)", color: "var(--color-text-primary)" }}
-              placeholder="Describe what you want the model to analyze..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-          </label>
-        )}
+
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -318,10 +296,6 @@ export default function Home() {
             )}
           </div>
           {error && <span className="text-red-500 text-sm">{error}</span>}
-          <label className="ml-auto flex items-center gap-2 text-xs" style={{ color: "var(--color-text-secondary)" }}>
-            <input type="checkbox" checked={showDebug} onChange={(e) => setShowDebug(e.target.checked)} />
-            Show context
-          </label>
         </div>
 
         {result && (
@@ -407,8 +381,7 @@ export default function Home() {
                 )}
                 
                 {/* Debug Information */}
-                {showDebug && (
-                  <div className="space-y-3">
+                <div className="space-y-3">
                     {indexDiag && (
                       <div>
                         <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Document Index</h4>
