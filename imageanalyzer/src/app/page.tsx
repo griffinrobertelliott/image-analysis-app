@@ -380,17 +380,21 @@ export default function Home() {
               <div className="mb-3">
                 <h4 className="text-sm font-medium mb-2" style={{ color: "var(--color-text-primary)" }}>Recommendation</h4>
                 <div
-                  role="textbox"
-                  aria-readonly="true"
-                  className="w-full rounded-md p-3 bg-transparent whitespace-pre-wrap break-words min-h-20"
+                  className="w-full rounded-md p-3"
                   style={{ 
                     border: "1px solid var(--color-border)", 
                     color: "var(--color-text-primary)",
-                    overflow: "visible",
-                    wordWrap: "break-word"
+                    background: "var(--panel-elevated)",
+                    minHeight: "80px"
                   }}
                 >
-                  {extractRecommendation(result)}
+                  <p className="whitespace-pre-wrap break-words m-0">
+                    {extractRecommendation(result)}
+                  </p>
+                </div>
+                {/* Debug info - remove after fixing */}
+                <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                  Debug: Length={extractRecommendation(result).length}, Text="{extractRecommendation(result).substring(0, 50)}..."
                 </div>
               </div>
               
