@@ -31,13 +31,13 @@ export default function Home() {
 
   const extractRecommendation = useCallback((text: string): string => {
     // Look specifically for "Recommendation:" section
-    const recommendationMatch = text.match(/\*\*Recommendation:\*\*\s*(.*?)(?=\n\n|\n\*\*|$)/is);
+    const recommendationMatch = text.match(/\*\*Recommendation:\*\*\s*([\s\S]*?)(?=\n\n|\n\*\*|$)/i);
     if (recommendationMatch && recommendationMatch[1]) {
       return recommendationMatch[1].trim();
     }
     
     // Fallback: look for "Recommendation:" without bold formatting
-    const simpleRecommendationMatch = text.match(/Recommendation:\s*(.*?)(?=\n\n|\n[A-Z]|$)/is);
+    const simpleRecommendationMatch = text.match(/Recommendation:\s*([\s\S]*?)(?=\n\n|\n[A-Z]|$)/i);
     if (simpleRecommendationMatch && simpleRecommendationMatch[1]) {
       return simpleRecommendationMatch[1].trim();
     }
