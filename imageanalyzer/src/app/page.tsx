@@ -30,83 +30,35 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const extractRecommendation = useCallback((text: string): string => {
-    console.log("=== EXTRACTING RECOMMENDATION ===");
-    console.log("Input text:", text);
-    console.log("Input length:", text.length);
+    // Look specifically for "Recommendation:" section
+    const recommendationMatch = text.match(/\*\*Recommendation:\*\*\s*(.*?)(?=\n\n|\n\*\*|$)/is);
+    if (recommendationMatch && recommendationMatch[1]) {
+      return recommendationMatch[1].trim();
+    }
     
-    // Look for "Recommendation:" or similar patterns
-    const recommendationPatterns = [
-      /recommendation:?\s*(.*)/i,
-      /recommend:?\s*(.*)/i,
-      /suggestion:?\s*(.*)/i,
-      /action:?\s*(.*)/i,
-      /next steps:?\s*(.*)/i,
-      /conclusion:?\s*(.*)/i
-    ];
-    
-    for (const pattern of recommendationPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        console.log("Found explicit pattern:", pattern);
-        return match[1].trim();
-      }
+    // Fallback: look for "Recommendation:" without bold formatting
+    const simpleRecommendationMatch = text.match(/Recommendation:\s*(.*?)(?=\n\n|\n[A-Z]|$)/is);
+    if (simpleRecommendationMatch && simpleRecommendationMatch[1]) {
+      return simpleRecommendationMatch[1].trim();
     }
     
     // If no explicit recommendation section, try to extract the last paragraph
     const paragraphs = text.split('\n\n').filter(p => p.trim());
-    console.log("Paragraphs found:", paragraphs.length);
-    
     if (paragraphs.length > 0) {
       const lastParagraph = paragraphs[paragraphs.length - 1].trim();
-      console.log("Last paragraph:", lastParagraph);
-      console.log("Last paragraph length:", lastParagraph.length);
-      
       // If the last paragraph seems like a conclusion/recommendation
-      if (lastParagraph.toLowerCase().includes('no') ||
-          lastParagraph.toLowerCase().includes('recommend') ||
+      if (lastParagraph.toLowerCase().includes('recommend') ||
           lastParagraph.toLowerCase().includes('action') ||
-          lastParagraph.toLowerCase().includes('attention') ||
           lastParagraph.toLowerCase().includes('required') ||
           lastParagraph.toLowerCase().includes('needed') ||
-          lastParagraph.toLowerCase().includes('standards') ||
-          lastParagraph.toLowerCase().includes('cleaning') ||
-          lastParagraph.toLowerCase().includes('maintenance')) {
-        console.log("Using last paragraph as recommendation");
+          lastParagraph.toLowerCase().includes('cleanup') ||
+          lastParagraph.toLowerCase().includes('immediate')) {
         return lastParagraph;
       }
     }
     
-    // If still no clear recommendation, try to find sentences that contain key recommendation words
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim());
-    console.log("Sentences found:", sentences.length);
-    
-    const recommendationSentences = sentences.filter(sentence => {
-      const lower = sentence.toLowerCase();
-      return lower.includes('no') ||
-             lower.includes('recommend') ||
-             lower.includes('action') ||
-             lower.includes('attention') ||
-             lower.includes('required') ||
-             lower.includes('needed') ||
-             lower.includes('standards') ||
-             lower.includes('cleaning') ||
-             lower.includes('maintenance') ||
-             lower.includes('should') ||
-             lower.includes('must');
-    });
-    
-    console.log("Recommendation sentences found:", recommendationSentences.length);
-    
-    if (recommendationSentences.length > 0) {
-      const result = recommendationSentences.join('. ').trim() + '.';
-      console.log("Using recommendation sentences:", result);
-      return result;
-    }
-    
-    // Fallback: return the full text if it's short, otherwise the first 300 characters
-    const result = text.length > 300 ? text.substring(0, 300) + '...' : text;
-    console.log("Using fallback:", result);
-    return result;
+    // Fallback: return the full text if it's short, otherwise the first 200 characters
+    return text.length > 200 ? text.substring(0, 200) + '...' : text;
   }, []);
 
   const classifyResult = useCallback((raw: string): boolean | null => {
@@ -408,7 +360,7 @@ export default function Home() {
                   }}
                 >
                   <p className="whitespace-pre-wrap break-words m-0">
-                    {result}
+                    {extractRecommendation(result)}
                   </p>
                 </div>
 
