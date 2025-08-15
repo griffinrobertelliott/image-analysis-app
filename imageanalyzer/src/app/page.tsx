@@ -30,6 +30,10 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const extractRecommendation = useCallback((text: string): string => {
+    console.log("=== EXTRACTING RECOMMENDATION ===");
+    console.log("Input text:", text);
+    console.log("Input length:", text.length);
+    
     // Look for "Recommendation:" or similar patterns
     const recommendationPatterns = [
       /recommendation:?\s*(.*)/i,
@@ -43,14 +47,20 @@ export default function Home() {
     for (const pattern of recommendationPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
+        console.log("Found explicit pattern:", pattern);
         return match[1].trim();
       }
     }
     
     // If no explicit recommendation section, try to extract the last paragraph
     const paragraphs = text.split('\n\n').filter(p => p.trim());
+    console.log("Paragraphs found:", paragraphs.length);
+    
     if (paragraphs.length > 0) {
       const lastParagraph = paragraphs[paragraphs.length - 1].trim();
+      console.log("Last paragraph:", lastParagraph);
+      console.log("Last paragraph length:", lastParagraph.length);
+      
       // If the last paragraph seems like a conclusion/recommendation
       if (lastParagraph.toLowerCase().includes('no') ||
           lastParagraph.toLowerCase().includes('recommend') ||
@@ -61,12 +71,15 @@ export default function Home() {
           lastParagraph.toLowerCase().includes('standards') ||
           lastParagraph.toLowerCase().includes('cleaning') ||
           lastParagraph.toLowerCase().includes('maintenance')) {
+        console.log("Using last paragraph as recommendation");
         return lastParagraph;
       }
     }
     
     // If still no clear recommendation, try to find sentences that contain key recommendation words
     const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+    console.log("Sentences found:", sentences.length);
+    
     const recommendationSentences = sentences.filter(sentence => {
       const lower = sentence.toLowerCase();
       return lower.includes('no') ||
@@ -82,12 +95,18 @@ export default function Home() {
              lower.includes('must');
     });
     
+    console.log("Recommendation sentences found:", recommendationSentences.length);
+    
     if (recommendationSentences.length > 0) {
-      return recommendationSentences.join('. ').trim() + '.';
+      const result = recommendationSentences.join('. ').trim() + '.';
+      console.log("Using recommendation sentences:", result);
+      return result;
     }
     
     // Fallback: return the full text if it's short, otherwise the first 300 characters
-    return text.length > 300 ? text.substring(0, 300) + '...' : text;
+    const result = text.length > 300 ? text.substring(0, 300) + '...' : text;
+    console.log("Using fallback:", result);
+    return result;
   }, []);
 
   const classifyResult = useCallback((raw: string): boolean | null => {
@@ -395,6 +414,9 @@ export default function Home() {
                 {/* Debug info - remove after fixing */}
                 <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
                   Debug: Length={extractRecommendation(result).length}, Text="{extractRecommendation(result).substring(0, 50)}..."
+                </div>
+                <div className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                  <strong>Full Response (Debug):</strong> {result}
                 </div>
               </div>
               
